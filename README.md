@@ -436,9 +436,8 @@ Register your Information Officer with the Information Regulator:
 
 ## 📬 Contact
 
-**Project Maintainer:** [Your Name]
-**Email:** [your@email.com]
-**Twitter/X:** [@yourhandle]
+**Project Maintainer:** [NumNine9]
+**Email:** [nyagura.george@gmail.com]
 
 ---
 
