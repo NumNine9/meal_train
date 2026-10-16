@@ -1,3 +1,5 @@
+readme.md
+
 # 🍲 Meal Train SA
 
 > A free, privacy-first Progressive Web App for coordinating meal deliveries to community members in need.
