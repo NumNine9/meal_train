@@ -2,6 +2,9 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import type { Database } from '@/types/database';
 
+const PROTECTED_PREFIXES = ['/dashboard', '/trains'];
+const AUTH_PREFIXES = ['/login', '/verify'];
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
@@ -26,8 +29,29 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  // Refresh session — DO NOT remove this
-  await supabase.auth.getUser();
+  // Refresh session — do NOT remove
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const path = request.nextUrl.pathname;
+
+  const isProtected = PROTECTED_PREFIXES.some((p) => path.startsWith(p));
+  const isAuthRoute = AUTH_PREFIXES.some((p) => path.startsWith(p));
+
+  // Not logged in + trying to access protected → /login
+  if (!user && isProtected) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/login';
+    return NextResponse.redirect(url);
+  }
+
+  // Logged in + trying to access /login or /verify → /dashboard
+  if (user && isAuthRoute) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/dashboard';
+    return NextResponse.redirect(url);
+  }
 
   return supabaseResponse;
 }
