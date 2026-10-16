@@ -1,4 +1,9 @@
 import { format, parseISO } from 'date-fns';
+import {
+  buildWhatsAppUrl,
+  composeReminderMessage,
+} from '@/lib/whatsapp';
+import { SendReminderButton } from './SendReminderButton';
 
 type Slot = {
   id: string;
@@ -6,7 +11,15 @@ type Slot = {
   meal_type: 'breakfast' | 'lunch' | 'dinner';
   status: 'open' | 'claimed' | 'delivered' | 'cancelled';
   claimed_by_name: string | null;
+  claimed_by_phone: string | null;
   volunteer_note: string | null;
+};
+
+type TrainContext = {
+  recipient_name: string;
+  delivery_address: string;
+  dietary_notes: string | null;
+  recipient_note: string | null;
 };
 
 const MEAL_LABELS = {
@@ -22,7 +35,6 @@ const STATUS_STYLES = {
   cancelled: 'bg-red-50 border-red-200 opacity-60',
 };
 
-// Group slots by date
 function groupByDate(slots: Slot[]) {
   return slots.reduce<Record<string, Slot[]>>((acc, slot) => {
     if (!acc[slot.date]) acc[slot.date] = [];
@@ -31,11 +43,15 @@ function groupByDate(slots: Slot[]) {
   }, {});
 }
 
-export function SlotCalendar({ slots }: { slots: Slot[] }) {
+export function SlotCalendar({
+  slots,
+  train,
+}: {
+  slots: Slot[];
+  train: TrainContext;
+}) {
   if (slots.length === 0) {
-    return (
-      <p className="text-sm text-gray-500">No slots to display.</p>
-    );
+    return <p className="text-sm text-gray-500">No slots to display.</p>;
   }
 
   const grouped = groupByDate(slots);
@@ -48,43 +64,74 @@ export function SlotCalendar({ slots }: { slots: Slot[] }) {
             {format(parseISO(date), 'EEE, d MMM yyyy')}
           </div>
           <div className="space-y-2">
-            {daySlots.map((slot) => (
-              <div
-                key={slot.id}
-                className={`border rounded-lg p-3 ${STATUS_STYLES[slot.status]}`}
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <span className="font-medium text-gray-900 text-sm">
-                      {MEAL_LABELS[slot.meal_type]}
-                    </span>
-                    {slot.claimed_by_name && (
-                      <span className="text-sm text-gray-600 ml-2">
-                        — {slot.claimed_by_name}
+            {daySlots.map((slot) => {
+              const canRemind =
+                slot.status === 'claimed' && slot.claimed_by_phone;
+
+              const whatsappUrl = canRemind
+                ? buildWhatsAppUrl(
+                    slot.claimed_by_phone!,
+                    composeReminderMessage({
+                      volunteerName: slot.claimed_by_name ?? 'there',
+                      recipientName: train.recipient_name,
+                      mealType: slot.meal_type,
+                      date: slot.date,
+                      deliveryAddress: train.delivery_address,
+                      dietaryNotes: train.dietary_notes,
+                      recipientNote: train.recipient_note,
+                    })
+                  )
+                : null;
+
+              return (
+                <div
+                  key={slot.id}
+                  className={`border rounded-lg p-3 ${STATUS_STYLES[slot.status]}`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <span className="font-medium text-gray-900 text-sm">
+                        {MEAL_LABELS[slot.meal_type]}
                       </span>
-                    )}
+                      {slot.claimed_by_name && (
+                        <span className="text-sm text-gray-600 ml-2">
+                          — {slot.claimed_by_name}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      {canRemind && whatsappUrl && (
+                        <SendReminderButton
+                          slotId={slot.id}
+                          volunteerPhone={slot.claimed_by_phone!}
+                          whatsappUrl={whatsappUrl}
+                        />
+                      )}
+                      <span
+                        className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                          slot.status === 'open'
+                            ? 'bg-gray-100 text-gray-600'
+                            : slot.status === 'claimed'
+                              ? 'bg-green-100 text-green-700'
+                              : slot.status === 'delivered'
+                                ? 'bg-gray-200 text-gray-600'
+                                : 'bg-red-100 text-red-700'
+                        }`}
+                      >
+                        {slot.status}
+                      </span>
+                    </div>
                   </div>
-                  <span
-                    className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                      slot.status === 'open'
-                        ? 'bg-gray-100 text-gray-600'
-                        : slot.status === 'claimed'
-                          ? 'bg-green-100 text-green-700'
-                          : slot.status === 'delivered'
-                            ? 'bg-gray-200 text-gray-600'
-                            : 'bg-red-100 text-red-700'
-                    }`}
-                  >
-                    {slot.status}
-                  </span>
+
+                  {slot.volunteer_note && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      {slot.volunteer_note}
+                    </p>
+                  )}
                 </div>
-                {slot.volunteer_note && (
-                  <p className="text-xs text-gray-500 mt-1">
-                    {slot.volunteer_note}
-                  </p>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       ))}

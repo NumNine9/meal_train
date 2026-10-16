@@ -100,7 +100,16 @@ async function TrainContent({ params }: { params: Params }) {
         <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-4">
           Calendar
         </h2>
-        <SlotCalendar slots={slots ?? []} />
+        
+        <SlotCalendar
+          slots={slots ?? []}
+          train={{
+            recipient_name: train.recipient_name,
+            delivery_address: train.delivery_address,
+            dietary_notes: train.dietary_notes,
+            recipient_note: train.recipient_note,
+          }}
+        />
       </div>
     </div>
   );

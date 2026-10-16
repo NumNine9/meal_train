@@ -1,8 +1,9 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { SignOutButton } from './sign-out-button';
-import { Greeting } from '../components/Greetings';
+import { Greeting } from '../../components/Greetings';
 import { connection } from 'next/server';
+import { InstallPrompt } from '@/components/InstallPrompt';
 
 export const instant = false;
 export default async function DashboardLayout({
@@ -35,6 +36,7 @@ export default async function DashboardLayout({
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-8">{children}</main>
+      <InstallPrompt />
     </div>
   );
 }
