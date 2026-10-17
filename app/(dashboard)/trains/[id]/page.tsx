@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import { connection } from 'next/server';
 import { notFound, redirect } from 'next/navigation';
+import { headers } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { ShareLink } from './ShareLink';
 import { SlotCalendar } from './SlotCalendar';
@@ -35,8 +36,11 @@ async function TrainContent({ params }: { params: Params }) {
     .order('date', { ascending: true })
     .order('meal_type', { ascending: true });
 
-  const appUrl =
-    process.env.NEXT_PUBLIC_APP_URL;
+  // Build URL from the actual request — works in dev, preview, and prod.
+  const headersList = await headers();
+  const host = headersList.get('host') ?? 'localhost:3000';
+  const proto = headersList.get('x-forwarded-proto') ?? 'http';
+  const appUrl = `${proto}://${host}`;
   const shareUrl = `${appUrl}/t/${train.share_token}`;
 
   const totalSlots = slots?.length ?? 0;
