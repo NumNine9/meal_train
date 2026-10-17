@@ -8,10 +8,9 @@ import Link from 'next/link';
 
 type Params = Promise<{ id: string }>;
 
-// Async child receives the params PROMISE — not the resolved value.
 async function TrainContent({ params }: { params: Params }) {
-  await connection();          // gate first
-  const { id } = await params; // 👈 await inside the suspended child
+  await connection();
+  const { id } = await params;
 
   const supabase = await createClient();
   const {
@@ -100,7 +99,6 @@ async function TrainContent({ params }: { params: Params }) {
         <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-4">
           Calendar
         </h2>
-        
         <SlotCalendar
           slots={slots ?? []}
           train={{
@@ -115,7 +113,6 @@ async function TrainContent({ params }: { params: Params }) {
   );
 }
 
-// Sync page — NO await params here. Pass the promise straight through.
 export default function TrainPage({ params }: { params: Params }) {
   return (
     <Suspense
