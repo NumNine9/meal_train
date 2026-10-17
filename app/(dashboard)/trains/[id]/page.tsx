@@ -36,7 +36,7 @@ async function TrainContent({ params }: { params: Params }) {
     .order('meal_type', { ascending: true });
 
   const appUrl =
-    process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+    process.env.NEXT_PUBLIC_APP_URL;
   const shareUrl = `${appUrl}/t/${train.share_token}`;
 
   const totalSlots = slots?.length ?? 0;
